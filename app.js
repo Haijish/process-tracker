@@ -767,7 +767,6 @@
     state.target = normalizeTarget(state.target);
     $("#targetSelect").value = state.target;
     renderStats();
-    renderSafety();
     renderTrend();
     renderFactorList();
     renderModule();
@@ -801,11 +800,6 @@
       module
         ? "解析結果から、いま扱うべきプロセスを絞ります。"
         : "50時点が集まるまでは介入を提案せず、記録だけを続けます。";
-  }
-
-  function renderSafety() {
-    const banner = $("#safetyBanner");
-    banner.hidden = true;
   }
 
   function renderTrend() {

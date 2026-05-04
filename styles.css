@@ -291,18 +291,6 @@ input[type="time"] {
   max-width: 190px;
 }
 
-.safety-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 18px;
-  padding: 14px 16px;
-  border: 1px solid #e4b5a8;
-  border-radius: 8px;
-  background: #fff1ea;
-  color: #772918;
-}
-
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
