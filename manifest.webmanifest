@@ -1,0 +1,25 @@
+{
+  "name": "Process Tracker",
+  "short_name": "Process",
+  "description": "30秒EMAでプロセスとウェルビーイングを記録し、個別化セルフケアにつなげるPBTプロトタイプ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5ef",
+  "theme_color": "#2f7d6b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

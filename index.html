@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2f7d6b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Process Tracker" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="description"
+      content="30秒EMAでプロセスとウェルビーイングを記録し、個別化セルフケアにつなげるPBTプロトタイプ。"
+    />
+    <title>Process Tracker</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-180.png" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="Process Tracker">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <strong>Process Tracker</strong>
+            <small>PBTセルフケア</small>
+          </span>
+        </div>
+        <div class="topbar-actions">
+          <span id="saveStatus" class="save-status" aria-live="polite">保存済み</span>
+          <button id="quickCheckBtn" class="button primary" type="button">30秒記録</button>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="画面切り替え">
+        <button class="tab is-active" type="button" data-view="today">今日</button>
+        <button class="tab" type="button" data-view="checkin">記録</button>
+        <button class="tab" type="button" data-view="analysis">分析</button>
+        <button class="tab" type="button" data-view="therapy">介入</button>
+        <button class="tab" type="button" data-view="settings">設定</button>
+      </nav>
+
+      <main>
+        <section id="view-today" class="view is-active" aria-labelledby="todayTitle">
+          <div class="page-head compact">
+            <div>
+              <h1 id="todayTitle">今日の状態</h1>
+              <p id="todaySubcopy">入力の波から、いま扱うべき変数を絞ります。</p>
+            </div>
+            <button id="runCheckInTop" class="button primary" type="button">今の状態を記録</button>
+          </div>
+
+          <div id="safetyBanner" class="safety-banner" hidden>
+            <strong>強い危機サインがあります。</strong>
+            <span>今すぐ地域の緊急窓口、医療機関、信頼できる人に連絡してください。</span>
+          </div>
+
+          <div class="metrics-grid" aria-label="記録状況">
+            <section class="metric-panel">
+              <span class="metric-label">記録数</span>
+              <strong id="recordCount">0</strong>
+              <span id="recordPace">データ待ち</span>
+            </section>
+            <section class="metric-panel accent-green">
+              <span class="metric-label">解析フェーズ</span>
+              <strong id="phaseLabel">Phase 1</strong>
+              <span id="phaseHint">記録のみ</span>
+            </section>
+            <section class="metric-panel accent-coral">
+              <span class="metric-label">次の通知</span>
+              <strong id="nextPrompt">未設定</strong>
+              <span id="notificationState">ページ表示中のみ</span>
+            </section>
+            <section class="metric-panel accent-gold">
+              <span class="metric-label">今日の候補</span>
+              <strong id="todayModuleName">提案待ち</strong>
+              <span id="todayModuleFocus">50時点後</span>
+            </section>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel trend-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>ウェルビーイング推移</h2>
+                  <span id="trendCaption">まだ記録がありません</span>
+                </div>
+                <select id="trendMetric" class="select compact-select" aria-label="推移の指標">
+                  <option value="momentary_wellbeing">ウェルビーイング</option>
+                  <option value="target_problem">困りごと</option>
+                  <option value="anxiety">不安・緊張</option>
+                  <option value="cognitive_fixation">認知的固着</option>
+                  <option value="values_action">価値行動</option>
+                </select>
+              </div>
+              <div id="trendChart" class="trend-chart" role="img" aria-label="推移グラフ"></div>
+            </section>
+
+            <section class="panel factor-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>本質候補</h2>
+                  <span id="factorCaption">50時点から自動解析</span>
+                </div>
+                <button id="runAnalysisMini" class="button ghost" type="button">解析</button>
+              </div>
+              <div id="factorList" class="factor-list"></div>
+            </section>
+
+            <section class="panel module-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>今日のマイクロ介入</h2>
+                  <span id="moduleCaption">データ量に応じて更新</span>
+                </div>
+                <button id="completeModuleBtn" class="button ghost" type="button">完了</button>
+              </div>
+              <div id="moduleBody" class="module-body"></div>
+            </section>
+
+            <section class="panel recent-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>直近ログ</h2>
+                  <span id="recentCaption">最新6件</span>
+                </div>
+              </div>
+              <div id="recentList" class="recent-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-checkin" class="view" aria-labelledby="checkinTitle">
+          <div class="page-head">
+            <div>
+              <h1 id="checkinTitle">30秒EMA</h1>
+              <p>その瞬間の状態だけを残します。</p>
+            </div>
+            <button id="openCheckInFromPage" class="button primary" type="button">記録を開始</button>
+          </div>
+
+          <div class="checkin-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>入力項目</h2>
+                  <span id="itemCountLabel">標準7項目</span>
+                </div>
+              </div>
+              <div id="itemPreviewList" class="item-preview-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>通知ウィンドウ</h2>
+                  <span>1日3回のランダム提示</span>
+                </div>
+              </div>
+              <div id="windowPreviewList" class="window-preview-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-analysis" class="view" aria-labelledby="analysisTitle">
+          <div class="page-head">
+            <div>
+              <h1 id="analysisTitle">ローカル探索分析</h1>
+              <p>このMVPはAR(1)残差 + Shadow比較です。本番tsBorutaはR解析に接続します。</p>
+            </div>
+            <div class="head-actions">
+              <select id="targetSelect" class="select" aria-label="分析ターゲット">
+                <option value="momentary_wellbeing">ウェルビーイングを上げる</option>
+                <option value="target_problem">困りごとを下げる</option>
+              </select>
+              <button id="runAnalysisBtn" class="button primary" type="button">解析を実行</button>
+            </div>
+          </div>
+
+          <div class="analysis-actions">
+            <button id="addSampleDataBtn" class="button ghost" type="button">サンプル60時点を追加</button>
+            <button id="exportDataBtn" class="button ghost" type="button">JSONを書き出し</button>
+          </div>
+
+          <section class="notice-panel">
+            <strong>研究用tsBorutaとの差分</strong>
+            <span>本来は各プロセスにauto.arimaを当て、残差をBorutaパッケージへ渡してConfirmed/Tentative/Rejectedを判定します。この画面の解析は端末内で動く軽量版なので、意思決定ではなく候補探索として扱います。</span>
+          </section>
+
+          <div class="analysis-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>解析品質</h2>
+                  <span id="analysisQualityCaption">未実行</span>
+                </div>
+              </div>
+              <div id="analysisQuality" class="quality-grid"></div>
+            </section>
+
+            <section class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <h2>要因判定</h2>
+                  <span id="analysisResultCaption">Confirmed / Tentative / Rejected</span>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>プロセス</th>
+                      <th>判定</th>
+                      <th>方向</th>
+                      <th>重要度</th>
+                      <th>Shadow閾値</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analysisTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-therapy" class="view" aria-labelledby="therapyTitle">
+          <div class="page-head">
+            <div>
+              <h1 id="therapyTitle">介入ライブラリ</h1>
+              <p>50時点後の解析結果に応じて、要因別マイクロモジュールを表示します。</p>
+            </div>
+          </div>
+
+          <div id="therapyGrid" class="therapy-grid"></div>
+        </section>
+
+        <section id="view-settings" class="view" aria-labelledby="settingsTitle">
+          <div class="page-head">
+            <div>
+              <h1 id="settingsTitle">設定</h1>
+              <p>項目、通知、データを端末内で管理します。</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>独自項目</h2>
+                  <span>睡眠、人間関係、身体感覚など</span>
+                </div>
+              </div>
+              <form id="customItemForm" class="inline-form">
+                <label>
+                  <span>項目名</span>
+                  <input id="customItemName" type="text" maxlength="18" placeholder="例：睡眠の質" />
+                </label>
+                <label>
+                  <span>高いほど</span>
+                  <select id="customItemPolarity" class="select">
+                    <option value="positive">好調に近い</option>
+                    <option value="negative">不調に近い</option>
+                    <option value="neutral">中立</option>
+                  </select>
+                </label>
+                <button class="button primary" type="submit">追加</button>
+              </form>
+              <div id="customItemList" class="settings-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>通知</h2>
+                  <span>指定枠内でランダム化</span>
+                </div>
+                <button id="enableNotificationsBtn" class="button ghost" type="button">有効化</button>
+              </div>
+              <div id="scheduleForm" class="schedule-form"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>データ</h2>
+                  <span>ローカル保存</span>
+                </div>
+              </div>
+              <div class="data-actions">
+                <button id="downloadDataBtn" class="button ghost" type="button">ダウンロード</button>
+                <label class="button ghost import-button">
+                  読み込み
+                  <input id="importDataInput" type="file" accept="application/json" />
+                </label>
+                <button id="clearDataBtn" class="button danger" type="button">全削除</button>
+              </div>
+              <p class="small-note">診断や医療判断の代替ではありません。強い危機感がある時は、地域の緊急窓口、医療機関、信頼できる人に連絡してください。</p>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Google Sheets</h2>
+                  <span id="googleSheetsStatus">未接続</span>
+                </div>
+              </div>
+              <div class="data-actions">
+                <button id="connectGoogleSheetsBtn" class="button primary" type="button">連携</button>
+                <button id="syncGoogleSheetsBtn" class="button ghost" type="button">未同期を同期</button>
+              </div>
+              <div id="googleSheetsDetail" class="sync-detail"></div>
+              <p class="small-note">Googleの許可後、本人のGoogle Drive内に専用スプレッドシートを作り、未同期の記録だけを追記します。</p>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="emaDialog" class="ema-dialog">
+      <form id="emaForm" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <h2>30秒記録</h2>
+            <span id="dialogTimestamp">今</span>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="閉じる" type="submit">×</button>
+        </div>
+
+        <label class="context-field">
+          <span>場面</span>
+          <select id="contextSelect" class="select">
+            <option value="work">仕事・学業</option>
+            <option value="home">家</option>
+            <option value="move">移動中</option>
+            <option value="people">人といる</option>
+            <option value="alone">ひとり</option>
+            <option value="other">その他</option>
+          </select>
+        </label>
+
+        <div id="emaSliderList" class="slider-list"></div>
+
+        <div class="dialog-actions">
+          <button id="cancelEmaBtn" class="button ghost" value="cancel" type="submit">キャンセル</button>
+          <button id="saveEmaBtn" class="button primary" value="default" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="./google-config.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "status": "draft",
+  "note": "Evidence-informed catalog for the PBT EMA prototype. Not a medical device configuration.",
+  "emaItems": [
+    {
+      "id": "momentary_wellbeing",
+      "label": "今のウェルビーイング",
+      "role": "outcome",
+      "dimension": "wellbeing",
+      "cadence": "every_prompt",
+      "scale": { "min": 1, "max": 5, "low": "低い", "high": "高い" }
+    },
+    {
+      "id": "target_problem",
+      "label": "困りごとの強さ",
+      "role": "outcome",
+      "dimension": "target_outcome",
+      "cadence": "every_prompt",
+      "scale": { "min": 1, "max": 5, "low": "ない", "high": "非常に" }
+    },
+    {
+      "id": "anxiety",
+      "label": "不安・緊張",
+      "role": "process",
+      "dimension": "affect",
+      "cadence": "every_prompt",
+      "polarity": "negative",
+      "modules": ["breathing_downshift", "acceptance_space", "graded_approach"],
+      "scale": { "min": 1, "max": 5, "low": "ない", "high": "強い" }
+    },
+    {
+      "id": "boredom_low_engagement",
+      "label": "退屈・低関与",
+      "role": "process",
+      "dimension": "affect_motivation",
+      "cadence": "every_prompt",
+      "polarity": "negative",
+      "modules": ["behavioral_activation", "values_next_step"],
+      "scale": { "min": 1, "max": 5, "low": "ない", "high": "強い" }
+    },
+    {
+      "id": "cognitive_fixation",
+      "label": "認知的固着・反すう",
+      "role": "process",
+      "dimension": "cognition",
+      "cadence": "every_prompt",
+      "polarity": "negative",
+      "modules": ["defusion_labeling", "cognitive_reappraisal", "compassion_reset"],
+      "scale": { "min": 1, "max": 5, "low": "ほどける", "high": "固い" }
+    },
+    {
+      "id": "present_moment_attention",
+      "label": "今ここへの注意",
+      "role": "process",
+      "dimension": "attention",
+      "cadence": "every_prompt",
+      "polarity": "positive",
+      "modules": ["mindful_attention"],
+      "scale": { "min": 1, "max": 5, "low": "散っている", "high": "向いている" }
+    },
+    {
+      "id": "values_action",
+      "label": "価値に沿った行動",
+      "role": "process",
+      "dimension": "motivation_overt_behavior",
+      "cadence": "every_prompt",
+      "polarity": "positive",
+      "modules": ["values_next_step"],
+      "scale": { "min": 1, "max": 5, "low": "少ない", "high": "多い" }
+    },
+    {
+      "id": "avoidance",
+      "label": "回避・先送り",
+      "role": "process",
+      "dimension": "overt_behavior",
+      "cadence": "every_prompt",
+      "polarity": "negative",
+      "modules": ["graded_approach", "behavioral_activation", "acceptance_space"],
+      "scale": { "min": 1, "max": 5, "low": "ない", "high": "強い" }
+    },
+    {
+      "id": "energy_body",
+      "label": "活力・身体の重さ",
+      "role": "process",
+      "dimension": "physiology",
+      "cadence": "rotating",
+      "polarity": "positive",
+      "modules": ["breathing_downshift", "sleep_anchor", "exercise_plus_reflection"],
+      "scale": { "min": 1, "max": 5, "low": "重い", "high": "軽い" }
+    },
+    {
+      "id": "sleep_quality",
+      "label": "睡眠の質",
+      "role": "process",
+      "dimension": "physiology",
+      "cadence": "daily",
+      "polarity": "positive",
+      "modules": ["sleep_anchor"],
+      "scale": { "min": 1, "max": 5, "low": "悪い", "high": "良い" }
+    },
+    {
+      "id": "social_connection",
+      "label": "つながり・孤立感",
+      "role": "process",
+      "dimension": "sociocultural",
+      "cadence": "rotating",
+      "polarity": "positive",
+      "modules": ["social_reachout"],
+      "scale": { "min": 1, "max": 5, "low": "孤立", "high": "つながり" }
+    },
+    {
+      "id": "interpersonal_stress",
+      "label": "対人ストレス",
+      "role": "process",
+      "dimension": "sociocultural",
+      "cadence": "rotating",
+      "polarity": "negative",
+      "modules": ["assertive_message", "breathing_downshift"],
+      "scale": { "min": 1, "max": 5, "low": "ない", "high": "強い" }
+    }
+  ],
+  "periodicScales": [
+    {
+      "id": "who5",
+      "label": "WHO-5",
+      "cadence": "weekly_or_biweekly",
+      "timeframe": "past_two_weeks",
+      "scoring": "sum_0_to_25_times_4"
+    }
+  ],
+  "modules": [
+    {
+      "id": "breathing_downshift",
+      "label": "呼吸・身体ダウンシフト",
+      "durationMinutes": 3,
+      "steps": ["足裏を床に置く", "4秒吸って6秒吐く", "次の一手を一つ決める"]
+    },
+    {
+      "id": "acceptance_space",
+      "label": "アクセプタンス",
+      "durationMinutes": 3,
+      "steps": ["感情に名前をつける", "身体感覚を10秒見る", "不快感があってもできる行動を選ぶ"]
+    },
+    {
+      "id": "defusion_labeling",
+      "label": "脱フュージョン",
+      "durationMinutes": 2,
+      "steps": ["固着した考えを一文にする", "文頭に「私は今、こう考えている」を足す", "ゆっくり一度読む"]
+    },
+    {
+      "id": "values_next_step",
+      "label": "価値の一手",
+      "durationMinutes": 3,
+      "steps": ["今日の価値語を一つ選ぶ", "5分以内の行動へ縮める", "実行だけを記録する"]
+    },
+    {
+      "id": "behavioral_activation",
+      "label": "行動活性",
+      "durationMinutes": 5,
+      "steps": ["2分で始められる行動を選ぶ", "抵抗感を1から5で見る", "終わったら状態を再記録する"]
+    },
+    {
+      "id": "graded_approach",
+      "label": "小さな接近",
+      "durationMinutes": 5,
+      "steps": ["避けている行動を一つ選ぶ", "安全な最小ステップにする", "実行後に不安と達成度を記録する"]
+    },
+    {
+      "id": "mindful_attention",
+      "label": "今ここへの注意",
+      "durationMinutes": 2,
+      "steps": ["見えるものを三つ見る", "聞こえる音を二つ聞く", "身体感覚を一つ見る"]
+    },
+    {
+      "id": "compassion_reset",
+      "label": "コンパッション",
+      "durationMinutes": 3,
+      "steps": ["今しんどいと認める", "同じ状況の友人に言う言葉を書く", "その言葉を自分にも向ける"]
+    },
+    {
+      "id": "social_reachout",
+      "label": "つながり行動",
+      "durationMinutes": 5,
+      "steps": ["連絡できる人を一人選ぶ", "短い一文だけ送る", "返信を待つ間の行動を決める"]
+    },
+    {
+      "id": "assertive_message",
+      "label": "境界線・非暴力的コミュニケーション",
+      "durationMinutes": 5,
+      "steps": ["事実を一文にする", "自分の感情と必要を分ける", "依頼を短く書く"]
+    },
+    {
+      "id": "sleep_anchor",
+      "label": "睡眠アンカー",
+      "durationMinutes": 3,
+      "steps": ["明日の起床時刻を決める", "起床後に光を浴びる場所を決める", "夜の刺激を一つ減らす"]
+    },
+    {
+      "id": "exercise_plus_reflection",
+      "label": "軽い運動 + 振り返り",
+      "durationMinutes": 10,
+      "steps": ["10分歩く", "身体の変化を一つ見る", "価値に沿った次の行動を一つ選ぶ"]
+    },
+    {
+      "id": "gratitude_three_good",
+      "label": "3つのよかったこと",
+      "durationMinutes": 3,
+      "steps": ["よかったことを三つ書く", "自分が関われた点を一つ見る", "明日増やせる条件を一つ決める"]
+    }
+  ]
+}

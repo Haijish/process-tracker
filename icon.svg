@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Process Tracker">
+  <rect width="512" height="512" rx="104" fill="#f6f5ef"/>
+  <path d="M106 122h300v268H106z" rx="36" fill="#fff" stroke="#dedbd1" stroke-width="12"/>
+  <path d="M140 324c44-74 77-104 111-91 27 10 45 51 76 31 16-10 29-33 45-69" fill="none" stroke="#2f7d6b" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="155" cy="323" r="22" fill="#d86650"/>
+  <circle cx="252" cy="234" r="22" fill="#bd8b2d"/>
+  <circle cx="330" cy="263" r="22" fill="#386f9f"/>
+  <path d="M144 158h224" stroke="#252a2b" stroke-width="20" stroke-linecap="round"/>
+  <path d="M144 190h124" stroke="#65706e" stroke-width="14" stroke-linecap="round"/>
+</svg>
