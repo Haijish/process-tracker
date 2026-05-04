@@ -71,8 +71,11 @@ https://ユーザー名.github.io
 API keyの `HTTP referrers`:
 
 ```text
+https://ユーザー名.github.io/*
 https://ユーザー名.github.io/process-tracker/*
 ```
+
+ブラウザや設定によって参照元URLが短く扱われることがあるので、`https://ユーザー名.github.io/*` も入れておくと安全です。
 
 ローカル開発を続けるなら、今までのこれも残します。
 
@@ -88,3 +91,13 @@ http://localhost:8787/*
 アプリ側の保存は、まずその端末のブラウザ内に残ります。Google Sheets連携を使うと、各ユーザーのスプレッドシートにも長期保存できます。
 
 Google CloudのOAuth同意画面が `Testing` のままだと、登録したテストユーザーしかGoogle連携できない場合があります。少人数で試す段階では、使ってもらう人のGmailを `Test users` に追加してください。広く配る段階では、OAuth同意画面を公開状態にします。
+
+## Google Sheets連携で失敗する時
+
+アプリの `設定 > Google Sheets` に前回の失敗理由が表示されます。よくある原因は次の3つです。
+
+- OAuth Clientの `Authorized JavaScript origins` に `https://ユーザー名.github.io` が入っていない
+- API keyの `HTTP referrers` に `https://ユーザー名.github.io/*` と `https://ユーザー名.github.io/process-tracker/*` が入っていない
+- OAuth同意画面が `Testing` のままで、使うGoogleアカウントが `Test users` に入っていない
+
+iPhoneのホーム画面アプリからGoogleの許可画面が開かない時は、まずSafariで公開URLを開いて連携してください。

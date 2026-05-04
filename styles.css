@@ -724,6 +724,14 @@ label span {
   overflow-wrap: anywhere;
 }
 
+.error-note {
+  padding: 10px 12px;
+  border: 1px solid #e4b5a8;
+  border-radius: 8px;
+  color: #772918;
+  background: #fff1ea;
+}
+
 .ema-dialog {
   width: min(680px, calc(100% - 24px));
   max-height: min(860px, calc(100% - 24px));

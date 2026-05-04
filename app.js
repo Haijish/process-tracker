@@ -261,6 +261,7 @@
   let state = loadState();
   let notificationTimer = null;
   let googleTokenClient = null;
+  let googleTokenReject = null;
   let googleAccessGranted = false;
   let googleClientReadyPromise = null;
 
@@ -345,6 +346,7 @@
       spreadsheetId: "",
       syncedRecordIds: [],
       lastSyncAt: null,
+      lastError: null,
     };
   }
 
@@ -354,6 +356,7 @@
       spreadsheetId: typeof value.spreadsheetId === "string" ? value.spreadsheetId : "",
       syncedRecordIds: Array.isArray(value.syncedRecordIds) ? value.syncedRecordIds.filter(Boolean) : [],
       lastSyncAt: typeof value.lastSyncAt === "string" ? value.lastSyncAt : null,
+      lastError: typeof value.lastError === "string" ? value.lastError : null,
     };
   }
 
@@ -1181,7 +1184,11 @@
 
     if (!spreadsheetId) {
       status.textContent = "未接続";
-      detail.innerHTML = `${state.records.length}件のローカル記録があります。連携すると本人のGoogle Drive内に専用シートを作ります。`;
+      const error = state.googleSheets?.lastError;
+      detail.innerHTML = `
+        <div>${state.records.length}件のローカル記録があります。連携すると本人のGoogle Drive内に専用シートを作ります。</div>
+        ${error ? `<div class="error-note">前回の失敗: ${escapeHtml(error)}</div>` : ""}
+      `;
       return;
     }
 
@@ -1413,7 +1420,14 @@
       toast("Google Sheets連携ができました。");
     } catch (error) {
       console.error(error);
-      toast("Google Sheets連携に失敗しました。");
+      const message = googleErrorMessage(error);
+      state.googleSheets = {
+        ...normalizeGoogleSheets(state.googleSheets),
+        lastError: message,
+      };
+      persist();
+      renderGoogleSheetsStatus();
+      toast(`Google Sheets連携に失敗しました: ${message}`);
     }
   }
 
@@ -1447,12 +1461,20 @@
         ...records.map((record) => record.id),
       ]);
       state.googleSheets.lastSyncAt = new Date().toISOString();
+      state.googleSheets.lastError = null;
       persist();
       renderGoogleSheetsStatus();
       toast(`${records.length}件をGoogle Sheetsへ同期しました。`);
     } catch (error) {
       console.error(error);
-      toast("Google Sheets同期に失敗しました。");
+      const message = googleErrorMessage(error);
+      state.googleSheets = {
+        ...normalizeGoogleSheets(state.googleSheets),
+        lastError: message,
+      };
+      persist();
+      renderGoogleSheetsStatus();
+      toast(`Google Sheets同期に失敗しました: ${message}`);
     }
   }
 
@@ -1466,15 +1488,34 @@
     if (googleAccessGranted && !options.prompt) return;
 
     await new Promise((resolve, reject) => {
+      const cleanup = () => {
+        window.clearTimeout(timeout);
+        googleTokenReject = null;
+      };
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("Google authorization timed out."));
+      }, 60000);
+      googleTokenReject = (error) => {
+        cleanup();
+        reject(normalizeGoogleError(error));
+      };
       googleTokenClient.callback = (response) => {
         if (response.error) {
-          reject(new Error(response.error));
+          cleanup();
+          reject(normalizeGoogleError(response));
           return;
         }
+        cleanup();
         googleAccessGranted = true;
         resolve(response);
       };
-      googleTokenClient.requestAccessToken({ prompt: options.prompt || "" });
+      try {
+        googleTokenClient.requestAccessToken({ prompt: options.prompt || "" });
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
     });
   }
 
@@ -1494,6 +1535,9 @@
         window.setTimeout(waitForScripts, 150);
       };
       waitForScripts();
+    }).catch((error) => {
+      googleClientReadyPromise = null;
+      throw error;
     });
     return googleClientReadyPromise;
   }
@@ -1509,7 +1553,66 @@
       client_id: config.clientId,
       scope: config.scopes,
       callback: () => {},
+      error_callback: (error) => {
+        if (googleTokenReject) googleTokenReject(error);
+      },
     });
+  }
+
+  function normalizeGoogleError(error) {
+    if (error instanceof Error) return error;
+    const message =
+      error?.error_description ||
+      error?.error ||
+      error?.type ||
+      error?.message ||
+      JSON.stringify(error);
+    return new Error(message);
+  }
+
+  function googleErrorMessage(error) {
+    const raw = googleErrorRawMessage(error);
+    const text = raw.toLowerCase();
+
+    if (text.includes("popup_failed_to_open")) {
+      return "Googleの許可画面を開けませんでした。Safariで開き直して、ポップアップを許可してください。";
+    }
+    if (text.includes("popup_closed")) {
+      return "Googleの許可画面が閉じられました。もう一度、最後まで許可してください。";
+    }
+    if (text.includes("access_denied")) {
+      return "Googleの許可がキャンセルされたか、OAuth同意画面のテストユーザーに入っていません。";
+    }
+    if (text.includes("origin") || text.includes("redirect_uri_mismatch") || text.includes("unauthorized_client")) {
+      return "Google CloudのOAuth Clientで、Authorized JavaScript originsに https://haijish.github.io を追加してください。";
+    }
+    if (text.includes("referer") || text.includes("referrer") || text.includes("api key") || text.includes("blocked")) {
+      return "Google CloudのAPI key制限で、HTTP referrersに https://haijish.github.io/* を追加してください。";
+    }
+    if (text.includes("api has not been used") || text.includes("disabled") || text.includes("not enabled")) {
+      return "Google CloudでGoogle Sheets APIが有効になっていません。Sheets APIを有効にしてください。";
+    }
+    if (text.includes("insufficient") && text.includes("scope")) {
+      return "Google Sheetsに必要な許可範囲が足りません。Google連携をやり直してください。";
+    }
+    if (text.includes("timed out")) {
+      return "Googleの許可画面が時間内に完了しませんでした。通信状態を確認してもう一度試してください。";
+    }
+
+    return raw || "詳細不明のエラーです。Google CloudのURL制限とOAuth設定を確認してください。";
+  }
+
+  function googleErrorRawMessage(error) {
+    return String(
+      error?.result?.error?.message ||
+        error?.result?.error?.status ||
+        error?.body ||
+        error?.message ||
+        error?.error_description ||
+        error?.error ||
+        error?.type ||
+        "",
+    );
   }
 
   async function createProcessTrackerSpreadsheet() {
